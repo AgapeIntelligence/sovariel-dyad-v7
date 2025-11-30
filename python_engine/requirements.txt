@@ -1,0 +1,7 @@
+﻿numpy
+scipy
+dash
+plotly
+pyserial
+pygame
+h5py
