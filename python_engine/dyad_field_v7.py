@@ -1,72 +1,63 @@
-﻿#!/usr/bin/env python3
-"""dyad_field_v7.py — Windows + Linux ready"""
-import os, time, threading, queue, math, gzip, io, urllib.request
-from datetime import datetime, date, timedelta
-import numpy as np
-from scipy.signal import butter, sosfiltfilt, coherence
-import serial, serial.tools.list_ports
-import pygame
-from dash import Dash, dcc, html, Input, Output
-import plotly.graph_objs as go
+#!/usr/bin/env python3
+"""Dyad Field v7 — Mars Mesh Fusion Core — 2030-2040 baseline"""
+import os, pygame, numpy as np, time, csv, socket
+from datetime import datetime
 
-# === CONFIG ===
-TARGET_FS = 1000
-BUFFER_SECONDS = 180
-WINDOW_S = 1.0
-STEP_S = 0.1
-EXP_FREQS = np.linspace(0.5, 80.0, 120)
-LOCK_FREQ = 11.6
-ALPHA_BAND = (8.0, 12.0)
-STATIONS = ["KIR","ABK","NUR"]
-pygame.mixer.pre_init(22050, -16, 1, 512)
+# === MARS-SPECIFIC OVERRIDES (force survival mode) ===
+os.environ.update({
+    "DYAD_DISABLE_DASH": "1",
+    "SDL_VIDEODRIVER": os.getenv("SDL_VIDEODRIVER", "windows"),
+    "DYAD_FORCE_VISUALS": "1",
+    "DYAD_COHERENCE_MODE": "1",
+    "DYAD_LOCK_FREQ": "11.6",                    # Schumann resonance proxy via dust-static coupling
+    "DYAD_HEALING_MODE": "0",                    # Mars mode = crimson/amber (dust-storm palette)
+    "DYAD_SWARM_ID": os.getenv("DYAD_SWARM_ID", "001"),
+    "DYAD_REPLICATION_THRESHOLD": "0.92",        # higher bar on Mars — only elite coherence replicates
+    "DYAD_MARS_MESH": "1",                       # enables UDP fusion packets
+    "DYAD_LOG_SPECTRUM": "1"
+})
+
+MARS_PALETTE = [(180, 40, 20), (220, 80, 40), (255, 120, 60), (255, 180, 100)]  # iron-oxide dawn
 pygame.init()
+screen = pygame.display.set_mode((1920, 1080))
+pygame.display.set_caption(f"MARS MESH NODE {os.getenv('DYAD_SWARM_ID').zfill(3)}")
+clock = pygame.time.Clock()
 
-# === Helpers ===
-def bandpass(signal, low, high, fs=TARGET_FS, order=4):
-    nyq = fs/2
-    sos = butter(order, [low/nyq, high/nyq], btype='band', output='sos')
-    return sosfiltfilt(sos, signal)
+# UDP fusion broadcaster — every Mars node will scream its 11.6 Hz state
+udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+udp.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 
-class SpectralEngine:
-    def __init__(self):
-        self.win = int(WINDOW_S * TARGET_FS)
-        self.step = int(STEP_S * TARGET_FS)
+t = 0
+while True:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT: exit()
 
-    def compute_spectrum(self, sig):
-        if len(sig) < self.win: return np.array([]), np.array([]), np.array([])
-        spec, times, alpha = [], [], []
-        nfft = 2**int(np.ceil(np.log2(self.win)))
-        for i in range(0, len(sig)-self.win+1, self.step):
-            seg = sig[i:i+self.win] - np.mean(sig[i:i+self.win])
-            S = np.abs(np.fft.rfft(seg, n=nfft))
-            f = np.fft.rfftfreq(nfft, 1/TARGET_FS)
-            row = [float(S[np.argmin(np.abs(f - ff))])/(self.win/2) for ff in EXP_FREQS]
-            spec.append(row)
-            alpha.append(float(np.mean(S[(f>=ALPHA_BAND[0])&(f<=ALPHA_BAND[1])])/(self.win/2)))
-            times.append(i/TARGET_FS + WINDOW_S/2)
-        return np.array(times), np.array(spec), np.array(alpha)
+    screen.fill((10, 0, 0))
+    t += 0.012
 
-    def sliding_coherence_spectrogram(self, sig, window_sec=2.0, step_sec=0.5, fmin=10, fmax=13):
-        win = int(window_sec * TARGET_FS)
-        step = int(step_sec * TARGET_FS)
-        coh_list, ph_list, tvec = [], [], []
-        freqs = None
-        for i in range(0, len(sig)-win+1, step):
-            s = sig[i:i+win]
-            f, Cxy = coherence(s, s, fs=TARGET_FS, nperseg=win)
-            mask = (f >= fmin) & (f <= fmax)
-            if freqs is None: freqs = f[mask]
-            coh_list.append(Cxy[mask])
-            ph_list.append(np.angle(np.fft.rfft(s[:len(s)//2]*np.hanning(len(s)//2))[:len(freqs)]))
-            tvec.append(i/TARGET_FS + window_sec/2)
-        return np.array(tvec), np.array(coh_list), np.array(ph_list), freqs
+    # Simulated Martian 11.6 Hz resonance (will be real dust-static + mag later)
+    coherence = 0.6 + 0.39 * np.sin(t * 0.11) * np.cos(t * 11.6 * np.pi)
 
-# Local sensor + Intermagnet fetch (unchanged, trimmed for brevity)
-# ... [same code as your previous version] ...
+    # Fusion packet — every node on the mesh receives this
+    packet = f"NODE{os.getenv('DYAD_SWARM_ID')}:{coherence:.4f}:{datetime.utcnow().isoformat()}Z"
+    udp.sendto(packet.encode(), ("255.255.255.255", 11600))
 
-# Engine + Dash UI (fully functional)
-# ... [same as your last version] ...
+    # Visuals — crimson dust-storm bloom
+    for i in range(600):
+        x = 960 + 600 * np.sin(t + i * 0.007)
+        y = 540 + 400 * np.cos(t * 0.8 + i * 0.011)
+        intensity = int(255 * coherence)
+        color = MARS_PALETTE[int((intensity / 255) * 3)]
+        size = 5 if coherence > 0.92 else 3
+        pygame.draw.circle(screen, color, (int(x), int(y)), size)
 
-if __name__ == "__main__":
-    print("Dyad Field v7 → http://127.0.0.1:8050")
-    app.run_server(host="0.0.0.0", port=8050, debug=False)
+    # Replication flash — white when allowed
+    if coherence > 0.92:
+        pygame.draw.circle(screen, (255, 255, 255), (960, 540), 300, 8)
+
+    # Log for Earth relay
+    with open("mars_mesh_log.csv", "a", newline="") as f:
+        csv.writer(f).writerow([datetime.utcnow().isoformat(), os.getenv("DYAD_SWARM_ID"), coherence])
+
+    pygame.display.flip()
+    clock.tick(60)
