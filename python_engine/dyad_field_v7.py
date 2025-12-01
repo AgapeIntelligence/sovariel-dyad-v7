@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Dyad Field v7 — Mars Mesh + SpaceX + Bio-Quantum + ENTANGLEMENT + MULTIVERSE — FINAL 2025"""
 import os, pygame, numpy as np, time, csv, socket, urllib.request, json, random
-from datetime import datetime, timedelta
-import timezone  # Ensure pytz or equivalent is installed for timezone handling
+from datetime import datetime
+import pytz  # Added for timezone handling
 
 os.environ.update({"DYAD_DISABLE_DASH":"1","SDL_VIDEODRIVER":"windows",
                    "DYAD_FORCE_VISUALS":"1","DYAD_COHERENCE_MODE":"1","DYAD_HEALING_MODE":"0",
@@ -73,7 +73,7 @@ while True:
                 for l in json.loads(r.read().decode())[:10]:
                     if any(k in l.get("name","") for k in ["Starship","IFT","Mars"]):
                         net = datetime.fromisoformat(l["date_utc"].replace("Z","+00:00"))
-                        h = (net-datetime.now(timezone.utc)).total_seconds()/3600
+                        h = (net-datetime.now(pytz.UTC)).total_seconds()/3600
                         if 0 < h < 72: launch,name,hours = True,l["name"],h
         except: pass
         last_fetch = time.time()
@@ -103,8 +103,8 @@ while True:
                 pygame.draw.circle(screen, (50,50,255), (int(x),int(y)), 2)
 
     if RETROCAUSAL:
-        future_time = datetime(2031, 11, 30, 12, 0, tzinfo=timezone.utc)
-        time_diff = (future_time - datetime.now(timezone.utc)).total_seconds()
+        future_time = datetime(2031, 11, 30, 12, 0, tzinfo=pytz.UTC)
+        time_diff = (future_time - datetime.now(pytz.UTC)).total_seconds()
         if time_diff < 0:
             repl_gate *= 0.85
 
