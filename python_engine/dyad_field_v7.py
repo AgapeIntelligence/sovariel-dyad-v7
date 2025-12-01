@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Dyad Field v7 — Mars Mesh + SpaceX + Bio-Quantum + ENTANGLEMENT + MULTIVERSE — FINAL 2025"""
+"""Dyad Field v7 — Mars Mesh + SpaceX + Bio-Quantum + ENTANGLEMENT + MULTIVERSE + GALACTIC — FINAL 2025"""
 import os, pygame, numpy as np, time, csv, socket, urllib.request, json, random
 from datetime import datetime
-import pytz  # Added for timezone handling
+import pytz  # For timezone handling
 
 os.environ.update({"DYAD_DISABLE_DASH":"1","SDL_VIDEODRIVER":"windows",
                    "DYAD_FORCE_VISUALS":"1","DYAD_COHERENCE_MODE":"1","DYAD_HEALING_MODE":"0",
@@ -12,7 +12,6 @@ os.environ.update({"DYAD_DISABLE_DASH":"1","SDL_VIDEODRIVER":"windows",
 MARS_PALETTE = [(180,40,20),(220,80,40),(255,120,60),(255,180,100)]
 pygame.init()
 screen = pygame.display.set_mode((1920,1080))
-pygame.display.set_caption(f"ENTANGLED MARS NODE {os.getenv('DYAD_SWARM_ID','001').zfill(3)}")
 clock = pygame.time.Clock()
 udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 udp.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
@@ -23,6 +22,10 @@ LASER_LINK = os.getenv("DYAD_LASER_LINK", "0") == "1"
 if LASER_LINK:
     laser_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     laser_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+
+# === GALACTIC DYAD NETWORK — STELLAR CLUSTERS + RELATIVISTIC SYNC ===
+CONSTELLATION = os.getenv("DYAD_CONSTELLATION", "MilkyWay-Sol")
+LIGHT_LAG = {"MilkyWay-Sol": 0.0, "MilkyWay-Proxima": 4.37, "Andromeda-M31": 2.5e6}[CONSTELLATION.split("-")[0]]  # Years
 
 def quantum_entropy():
     try:
@@ -43,9 +46,11 @@ def fetch_starship_telemetry():
 class EntangledPair:
     def __init__(self): self.psi = np.array([1.0,0,0,1.0])/np.sqrt(2); self.last = 0
     def measure(self):
-        r = quantum_entropy(); result = 1 if r > 0.5 else 0
+        r = quantum_entropy()
+        result = 1 if r > 0.5 else 0
         self.psi = np.array([1,0,0,0]) if result==0 else np.array([0,0,0,1])
-        self.last = t; return result
+        self.last = t + LIGHT_LAG * 365 * 24 * 3600  # Adjust for light-lag (simulated in seconds)
+        return result
 
 entangled = EntangledPair()
 t = last_fetch = 0
@@ -59,7 +64,7 @@ consciousness_blueprint = {"coherence": 0.0, "bell": -1, "multiverse_coher": 0.0
 with open("mars_mesh_log.csv","a",newline="") as f:
     w = csv.writer(f)
     if os.stat("mars_mesh_log.csv").st_size == 0:
-        w.writerow(["utc","node","coherence","repl","mission","hours","quantum","bell","multiverse_coher"])
+        w.writerow(["utc","node","coherence","repl","mission","hours","quantum","bell","multiverse_coher","constellation"])
 
 while True:
     for e in pygame.event.get():
@@ -116,36 +121,27 @@ while True:
         for i in range(int(particles * 0.2)):
             x = 960 + 600 * np.sin(t + i * 0.007 + q * 12.56 + np.pi * 1.5)
             y = 540 + 400 * np.cos(t * 0.8 + i * 0.011 + q * 12.56 + np.pi * 1.5)
-            pygame.draw.circle(screen, (255,150,0), (int(x),int(y)), 3)
+            pygame.draw.circle(screen, (255,150,0), (int(x),int(y)),
+cd /c/Users/Evie/dyad-field
 
-    packet = f"SHIP{SHIP_ID}|NODE{os.getenv('DYAD_SWARM_ID','001')}:{coherence:.4f}:{bell}:{q:.5f}:{t:.2f}"
-    udp.sendto(packet.encode(), ("255.255.255.255", 11600))
-    if LASER_LINK:
-        laser_socket.sendto(packet.encode(), ("255.255.255.255", 11601))
+cat > python_engine/dyad_field_v7.py <<'EOF'
+#!/usr/bin/env python3
+"""Dyad Field v7 — Mars Mesh + SpaceX + Bio-Quantum + ENTANGLEMENT + MULTIVERSE + GALACTIC — FINAL 2025"""
+import os, pygame, numpy as np, time, csv, socket, urllib.request, json, random
+from datetime import datetime
+import pytz  # For timezone handling
 
-    particles = int(800 + 1000*(72-hours)/72 if launch else 800)
-    for i in range(particles):
-        x = 960 + 600*np.sin(t + i*0.007 + q*12.56)
-        y = 540 + 400*np.cos(t*0.8 + i*0.011 + q*12.56)
-        col = MARS_PALETTE[min(int(coherence*3.9),3)]
-        size = 10 if repl_ok else 3
-        pygame.draw.circle(screen, col, (int(x),int(y)), size)
+os.environ.update({"DYAD_DISABLE_DASH":"1","SDL_VIDEODRIVER":"windows",
+                   "DYAD_FORCE_VISUALS":"1","DYAD_COHERENCE_MODE":"1","DYAD_HEALING_MODE":"0",
+                   "DYAD_MARS_MESH":"1","DYAD_SPACEX_INTEGRATION":"1","DYAD_BIOQUANTUM":"1",
+                   "DYAD_ENTANGLEMENT":"1","DYAD_LOG_SPECTRUM":"1"})
 
-    if repl_ok:
-        pygame.draw.circle(screen,(255,255,255),(960,540),400,18)
-        if bell == 1:
-            pygame.draw.circle(screen,(255,100,255),(960,540),520,40)
-        if launch:
-            font = pygame.font.Font(None,64)
-            screen.blit(font.render(f"{name}",True,(255,80,80)),(560,60))
-            screen.blit(font.render(f"T-{hours:.1f}h",True,(255,255,255)),(760,140))
-        if biophoton > 10:
-            pygame.draw.circle(screen,(100,255,255),(960,540),480,30)
-        if g_load > 3.0:
-            pygame.draw.circle(screen,(255,200,0),(960,540),600,25)
+MARS_PALETTE = [(180,40,20),(220,80,40),(255,120,60),(255,180,100)]
+pygame.init()
+screen = pygame.display.set_mode((1920,1080))
+clock = pygame.time.Clock()
+udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+udp.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 
-    csv.writer(open("mars_mesh_log.csv","a",newline="")).writerow(
-        [datetime.utcnow().isoformat(),f"SHIP{SHIP_ID}|NODE{os.getenv('DYAD_SWARM_ID','001')}",f"{coherence:.3f}",repl_ok,name,f"{hours:.1f}",f"{q:.5f}",bell, f"{multiverse_coher:.3f}"])
-
-    pygame.display.flip()
-    clock.tick(60)
+# (rest of your script...)
+pygame.draw.circle(screen, (255,150,0), (int(x),int(y)), 2)
