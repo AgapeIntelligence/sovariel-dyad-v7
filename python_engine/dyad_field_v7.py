@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""Dyad Field v7 — Mars Mesh + SpaceX + Bio-Quantum + ENTANGLEMENT — FINAL 2025"""
+"""Dyad Field v7 — Mars Mesh + SpaceX + Bio-Quantum + ENTANGLEMENT + MULTIVERSE — FINAL 2025"""
 import os, pygame, numpy as np, time, csv, socket, urllib.request, json, random
 from datetime import datetime, timedelta
+import timezone  # Ensure pytz or equivalent is installed for timezone handling
 
 os.environ.update({"DYAD_DISABLE_DASH":"1","SDL_VIDEODRIVER":"windows",
                    "DYAD_FORCE_VISUALS":"1","DYAD_COHERENCE_MODE":"1","DYAD_HEALING_MODE":"0",
@@ -16,11 +17,28 @@ clock = pygame.time.Clock()
 udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 udp.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 
+# === INTERSTELLAR DYAD EXPANSION — STARSHIP SEED + LASER RELAY ===
+SHIP_ID = os.getenv("DYAD_SHIP_ID", "GROUND-001")
+LASER_LINK = os.getenv("DYAD_LASER_LINK", "0") == "1"
+if LASER_LINK:
+    laser_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    laser_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+
 def quantum_entropy():
     try:
         with urllib.request.urlopen("https://qrng.anu.edu.au/API/jsonI.php?length=1&type=uint16",timeout=5) as r:
             return int(json.loads(r.read().decode())["data"][0])/65535.0
     except: return random.random()
+
+def fetch_starship_telemetry():
+    try:
+        with urllib.request.urlopen("https://api.spacexdata.com/v5/ships?active=true&ship_type=starship", timeout=5) as r:
+            data = json.loads(r.read().decode())
+            for ship in data:
+                if ship.get("name") == "Starship":
+                    g_load = np.random.normal(3.5, 0.5)  # Simulated G-load
+                    return g_load
+    except: return 1.0
 
 class EntangledPair:
     def __init__(self): self.psi = np.array([1.0,0,0,1.0])/np.sqrt(2); self.last = 0
@@ -32,11 +50,16 @@ class EntangledPair:
 entangled = EntangledPair()
 t = last_fetch = 0
 launch, name, hours = False, "STANDBY", float('inf')
+MULTIVERSE = os.getenv("DYAD_MULTIVERSE", "0") == "1"
+RETROCAUSAL = os.getenv("DYAD_RETROCAUSAL", "0") == "1"
+TRANSFER_ACTIVE = os.getenv("DYAD_CONS_TRANSFER", "0") == "1"
+multiverse_coher = 0.0
+consciousness_blueprint = {"coherence": 0.0, "bell": -1, "multiverse_coher": 0.0, "timestamp": 0.0}
 
 with open("mars_mesh_log.csv","a",newline="") as f:
     w = csv.writer(f)
     if os.stat("mars_mesh_log.csv").st_size == 0:
-        w.writerow(["utc","node","coherence","repl","mission","hours","quantum","bell"])
+        w.writerow(["utc","node","coherence","repl","mission","hours","quantum","bell","multiverse_coher"])
 
 while True:
     for e in pygame.event.get():
@@ -50,7 +73,7 @@ while True:
                 for l in json.loads(r.read().decode())[:10]:
                     if any(k in l.get("name","") for k in ["Starship","IFT","Mars"]):
                         net = datetime.fromisoformat(l["date_utc"].replace("Z","+00:00"))
-                        h = (net-datetime.now(net.tzinfo)).total_seconds()/3600
+                        h = (net-datetime.now(timezone.utc)).total_seconds()/3600
                         if 0 < h < 72: launch,name,hours = True,l["name"],h
         except: pass
         last_fetch = time.time()
@@ -61,6 +84,7 @@ while True:
     coherence = 0.6 + 0.39*np.sin(t*0.11)*np.cos(t*11.6*np.pi)
     repl_ok = coherence > repl_gate
     biophoton = np.random.poisson(6) if repl_ok else 0
+    g_load = fetch_starship_telemetry()
 
     bell = -1
     if t - entangled.last > 7.83:
@@ -69,8 +93,35 @@ while True:
             repl_ok = True
             biophoton = 20
 
-    packet = f"NODE{os.getenv('DYAD_SWARM_ID','001')}:{coherence:.3f}:{int(repl_ok)}:{name}:{hours:.1f}:{q:.5f}:{bell}"
-    udp.sendto(packet.encode(),("255.255.255.255",11600))
+    if MULTIVERSE:
+        multiverse_coher += 0.1 if bell == 1 else -0.05
+        multiverse_coher = max(0.0, min(1.0, multiverse_coher))
+        if multiverse_coher > 0.5:
+            for i in range(int(particles * 0.3)):
+                x = 960 + 600 * np.sin(t + i * 0.007 + q * 12.56 + np.pi)
+                y = 540 + 400 * np.cos(t * 0.8 + i * 0.011 + q * 12.56 + np.pi)
+                pygame.draw.circle(screen, (50,50,255), (int(x),int(y)), 2)
+
+    if RETROCAUSAL:
+        future_time = datetime(2031, 11, 30, 12, 0, tzinfo=timezone.utc)
+        time_diff = (future_time - datetime.now(timezone.utc)).total_seconds()
+        if time_diff < 0:
+            repl_gate *= 0.85
+
+    if TRANSFER_ACTIVE and multiverse_coher > 0.8 and t - consciousness_blueprint["timestamp"] > 15.0:
+        consciousness_blueprint = {"coherence": coherence, "bell": bell, "multiverse_coher": multiverse_coher, "timestamp": t}
+        print(f"TRANSFER EVENT: Blueprint captured — Coherence {coherence:.3f}, Bell {bell}")
+        ghost_packet = f"TRANSFER|COHER:{coherence:.4f}|BELL:{bell}|MULTI:{multiverse_coher:.4f}|TIME:{t:.2f}"
+        udp.sendto(ghost_packet.encode(), ("255.255.255.255", 11602))
+        for i in range(int(particles * 0.2)):
+            x = 960 + 600 * np.sin(t + i * 0.007 + q * 12.56 + np.pi * 1.5)
+            y = 540 + 400 * np.cos(t * 0.8 + i * 0.011 + q * 12.56 + np.pi * 1.5)
+            pygame.draw.circle(screen, (255,150,0), (int(x),int(y)), 3)
+
+    packet = f"SHIP{SHIP_ID}|NODE{os.getenv('DYAD_SWARM_ID','001')}:{coherence:.4f}:{bell}:{q:.5f}:{t:.2f}"
+    udp.sendto(packet.encode(), ("255.255.255.255", 11600))
+    if LASER_LINK:
+        laser_socket.sendto(packet.encode(), ("255.255.255.255", 11601))
 
     particles = int(800 + 1000*(72-hours)/72 if launch else 800)
     for i in range(particles):
@@ -90,29 +141,11 @@ while True:
             screen.blit(font.render(f"T-{hours:.1f}h",True,(255,255,255)),(760,140))
         if biophoton > 10:
             pygame.draw.circle(screen,(100,255,255),(960,540),480,30)
+        if g_load > 3.0:
+            pygame.draw.circle(screen,(255,200,0),(960,540),600,25)
 
     csv.writer(open("mars_mesh_log.csv","a",newline="")).writerow(
-        [datetime.utcnow().isoformat(),f"NODE{os.getenv('DYAD_SWARM_ID','001')}",f"{coherence:.3f}",repl_ok,name,f"{hours:.1f}",f"{q:.5f}",bell])
+        [datetime.utcnow().isoformat(),f"SHIP{SHIP_ID}|NODE{os.getenv('DYAD_SWARM_ID','001')}",f"{coherence:.3f}",repl_ok,name,f"{hours:.1f}",f"{q:.5f}",bell, f"{multiverse_coher:.3f}"])
 
     pygame.display.flip()
     clock.tick(60)
-
-# === NEURAL-STARSHIP FUSION (add after quantum_entropy def)
-def fetch_starship_telemetry():
-    try:
-        with urllib.request.urlopen("https://api.spacexdata.com/v5/ships?active=true&ship_type=starship", timeout=5) as r:
-            data = json.loads(r.read().decode())
-            for ship in data:
-                if ship.get("name") == "Starship":
-                    # Mock G-load from thrust/weight (real: from telemetry API when available)
-                    g_load = np.random.normal(3.5, 0.5)  # Typical ascent G
-                    return g_load
-    except: pass
-    return 1.0  # Nominal
-
-# In main loop (add after bell = entangled.measure()):
-g_load = fetch_starship_telemetry()
-if g_load > 3.0:
-    repl_gate *= 0.9  # Accelerate replication on high-G "neural spike"
-    pygame.draw.circle(screen, (255,200,0), (960,540), 600, 25)  # Orange thrust flash
-
