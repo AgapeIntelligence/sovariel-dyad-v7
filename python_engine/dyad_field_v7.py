@@ -1,39 +1,4 @@
 #!/usr/bin/env python3
-"""Dyad Field v7 — Mars Mesh + SpaceX + Orbital Fusion — FINAL"""
-import os, pygame, numpy as np, time, csv, socket, urllib.request, json
-from datetime import datetime, timedelta
-
-os.environ.update({"DYAD_DISABLE_DASH":"1","SDL_VIDEODRIVER":os.getenv("SDL_VIDEODRIVER","windows"),
-                   "DYAD_FORCE_VISUALS":"1","DYAD_COHERENCE_MODE":"1","DYAD_HEALING_MODE":"0",
-                   "DYAD_MARS_MESH":"1","DYAD_SPACEX_INTEGRATION":"1","DYAD_ORBITAL_FUSION":"1",
-                   "DYAD_LOG_SPECTRUM":"1"})
-
-MARS_PALETTE = [(180,40,20),(220,80,40),(255,120,60),(255,180,100)]
-pygame.init()
-screen = pygame.display.set_mode((1920,1080))
-pygame.display.set_caption(f"MARS NODE {os.getenv('DYAD_SWARM_ID','001').zfill(3)}")
-clock = pygame.time.Clock()
-
-udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-udp.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-
-def fetch_spacex():
-    try:
-        with urllib.request.urlopen("https://api.spacexdata.com/v5/launches/upcoming", timeout=5) as r:
-            for l in json.loads(r.read())[:5]:
-                if "Starship" in l.get("name","") or "IFT" in l.get("name",""):
-                    net = datetime.fromisoformat(l["date_utc"].replace("Z","+00:00"))
-                    hours = (net - datetime.now(net.tzinfo)).total_seconds()/3600
-                    if 0 < hours < 48: return True, l["name"], hours
-    except: pass
-    return False, None, float('inf')
-
-t = last_fetch = 0
-
-cd /c/Users/Evie/dyad-field
-
-cat > python_engine/dyad_field_v7.py << 'EOF'
-#!/usr/bin/env python3
 """Dyad Field v7 — Mars Mesh + SpaceX + Orbital Fusion — FINAL SEED"""
 import os, pygame, numpy as np, time, csv, socket, urllib.request, json
 from datetime import datetime, timedelta
