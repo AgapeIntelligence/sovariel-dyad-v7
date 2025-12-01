@@ -1,0 +1,1 @@
+@echo off  echo cd /d "%~dp0"  set SDL_VIDEODRIVER=windows  echo set SDL_AUDIODRIVER=null  echo set PYGAME_HIDE _SUPPORT_PROMPT=1  echo set DYAD_DISABLE_DASH=1  echo py -3.11 python_engine/dyad_field_v7.py  echo pause 
